@@ -1,6 +1,7 @@
 ### Universal ###
 # Common files that should be ignored in all projects
-
+*.vs
+*.git
 # Logs
 *.log
 # Temporary files
