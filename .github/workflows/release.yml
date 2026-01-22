@@ -1,0 +1,40 @@
+name: Build WPF Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup .NET 8
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Restore
+      run: dotnet restore
+
+    - name: Publish WPF App
+      run: |
+        dotnet publish SnowblindModPlayer/SnowblindModPlayer.csproj `
+          -c Release `
+          -r win-x64 `
+          --self-contained true `
+          /p:PublishSingleFile=true `
+          -o publish
+
+    - name: ZIP erstellen
+      run: |
+        Compress-Archive -Path publish\* -DestinationPath SnowblindModPlayer-win-x64.zip
+
+    - name: GitHub Release erstellen
+      uses: softprops/action-gh-release@v2
+      with:
+        files: MeineApp-win-x64.zip
