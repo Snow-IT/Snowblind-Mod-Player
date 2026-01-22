@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>SnowblindModPlayer</AssemblyName>
+    <RootNamespace>SnowblindModPlayer</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="LibVLCSharp.WPF" Version="3.9.5" />
+    <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.23" />
+    <PackageReference Include="TaskScheduler" Version="2.12.2" />
+    <PackageReference Include="WPF-UI" Version="4.2.0" />
+  </ItemGroup>
+
+</Project>
