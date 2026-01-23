@@ -77,11 +77,17 @@
         </ListView>
 
         <!-- C: named ScrollViewer + PreviewMouseWheel to ensure trackpad scrolling anywhere -->
-        <ScrollViewer x:Name="ThumbScroll" Grid.Row="1" VerticalScrollBarVisibility="Auto" PanningMode="VerticalOnly" PreviewMouseWheel="OnPreviewMouseWheel">
+        <ScrollViewer x:Name="ThumbScroll" Grid.Row="1"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled"
+                      PanningMode="VerticalOnly"
+                      PreviewMouseWheel="OnPreviewMouseWheel">
             <ListBox x:Name="ThumbList" ItemsSource="{Binding Items}" SelectionMode="Single" Background="Transparent" BorderThickness="0">
                 <ListBox.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <WrapPanel />
+                        <!-- Vertikale Orientierung: Elemente füllen Spalten von oben nach unten,
+                             ScrollViewer sorgt für vertikales Scrollen (wie Ordneransicht) -->
+                        <WrapPanel Orientation="Vertical" ItemWidth="220" />
                     </ItemsPanelTemplate>
                 </ListBox.ItemsPanel>
                 <ListBox.ItemTemplate>
