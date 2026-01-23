@@ -2,11 +2,10 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using Application = System.Windows.Application;
 
 namespace SnowblindModPlayer;
 
-public partial class App : Application
+public partial class App : System.Windows.Application
 {
     public static App Instance => (App)System.Windows.Application.Current;
 
@@ -22,21 +21,22 @@ public partial class App : Application
 
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
-        var args = e.Args.Select(a => a.ToLowerInvariant()).ToArray();
-        var forceSettings = args.Contains("--settings");
-
         MediaLibraryStore.EnsureFolders();
         CurrentSettings = SettingsStore.Load();
         CurrentLibrary = MediaLibraryStore.Load();
+        ApplyDefaultMarkers();
 
         _player = new PlayerWindow();
-        _tray = new TrayService(_player);
+        _tray = new TrayService();
         _tray.ShowMainWindowRequested += () => ShowMainWindow();
         _tray.ExitRequested += () => ExitApp();
         _tray.PlayDefaultRequested += () => TryPlayDefault();
         _tray.PlayVideoRequested += id => TryPlayById(id);
         _tray.StopRequested += () => _player.Stop();
-        _tray.Update(CurrentSettings, CurrentLibrary);
+        _tray.Update(CurrentLibrary);
+
+        var args = e.Args.Select(a => a.ToLowerInvariant()).ToArray();
+        var forceSettings = args.Contains("--settings");
 
         if (forceSettings)
         {
@@ -44,6 +44,7 @@ public partial class App : Application
             return;
         }
 
+        // Autoplay directly (as desired)
         var ok = SettingsValidator.IsReadyToAutoplay(CurrentSettings, CurrentLibrary, out var reason);
         if (!ok)
         {
@@ -51,27 +52,36 @@ public partial class App : Application
             return;
         }
 
-        if (CurrentSettings.AutoPlayOnStart)
-        {
-            if (CurrentSettings.StartDelaySeconds > 0)
-                await Task.Delay(CurrentSettings.StartDelaySeconds * 1000);
+        if (CurrentSettings.StartDelaySeconds > 0)
+            await Task.Delay(CurrentSettings.StartDelaySeconds * 1000);
 
-            TryPlayDefault();
-        }
+        TryPlayDefault();
     }
 
     public void SaveSettings(AppSettings newSettings)
     {
         CurrentSettings = newSettings;
         SettingsStore.Save(CurrentSettings);
-        _tray?.Update(CurrentSettings, CurrentLibrary);
+        ApplyDefaultMarkers();
+        _tray?.Update(CurrentLibrary);
     }
 
     public void SaveLibrary(MediaLibrary library)
     {
         CurrentLibrary = library;
         MediaLibraryStore.Save(CurrentLibrary);
-        _tray?.Update(CurrentSettings, CurrentLibrary);
+        ApplyDefaultMarkers();
+        _tray?.Update(CurrentLibrary);
+    }
+
+    public void ApplyDefaultMarkers()
+    {
+        var defaultId = CurrentSettings.DefaultVideoId;
+        foreach (var it in CurrentLibrary.Items)
+        {
+            it.IsDefault = it.Id == defaultId;
+            it.DefaultStarOpacity = it.IsDefault ? 1.0 : 0.12;
+        }
     }
 
     private void TryPlayDefault()
@@ -83,12 +93,6 @@ public partial class App : Application
             return;
         }
 
-        if (!SettingsValidator.HasValidMonitor(CurrentSettings, out var monitorReason))
-        {
-            ShowMainWindow(monitorReason);
-            return;
-        }
-
         _player?.Play(CurrentSettings, item.StoredPath);
     }
 
@@ -97,12 +101,6 @@ public partial class App : Application
         var item = CurrentLibrary.Items.FirstOrDefault(v => v.Id == id);
         if (item == null || !System.IO.File.Exists(item.StoredPath))
             return;
-
-        if (!SettingsValidator.HasValidMonitor(CurrentSettings, out var monitorReason))
-        {
-            ShowMainWindow(monitorReason);
-            return;
-        }
 
         _player?.Play(CurrentSettings, item.StoredPath);
     }
@@ -124,7 +122,7 @@ public partial class App : Application
         if (!string.IsNullOrWhiteSpace(hint))
             win.SetHint(hint);
 
-        win.RefreshFromAppState();
+        win.RefreshBindings();
     }
 
     private void ExitApp()

@@ -8,7 +8,6 @@ namespace SnowblindModPlayer;
 public class TrayService : IDisposable
 {
     private readonly NotifyIcon _icon;
-    private readonly PlayerWindow _player;
 
     public event Action? ShowMainWindowRequested;
     public event Action? ExitRequested;
@@ -18,10 +17,8 @@ public class TrayService : IDisposable
 
     private MediaLibrary _library = new();
 
-    public TrayService(PlayerWindow player)
+    public TrayService()
     {
-        _player = player;
-
         _icon = new NotifyIcon
         {
             Visible = true,
@@ -33,7 +30,7 @@ public class TrayService : IDisposable
         _icon.DoubleClick += (_, __) => ShowMainWindowRequested?.Invoke();
     }
 
-    public void Update(AppSettings settings, MediaLibrary library)
+    public void Update(MediaLibrary library)
     {
         _library = library;
         RebuildMenu();

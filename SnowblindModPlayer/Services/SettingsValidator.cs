@@ -20,38 +20,6 @@ public static class SettingsValidator
             return false;
         }
 
-        if (!HasValidMonitor(s, out var monitorReason))
-        {
-            reason = monitorReason;
-            return false;
-        }
-
-        return true;
-    }
-
-    public static bool HasValidMonitor(AppSettings s, out string reason)
-    {
-        reason = "";
-        var screens = System.Windows.Forms.Screen.AllScreens;
-
-        if (screens.Length == 0)
-        {
-            reason = "Keine Monitore erkannt.";
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(s.MonitorDeviceName))
-        {
-            reason = "Kein Monitor ausgewählt.";
-            return false;
-        }
-
-        if (!screens.Any(sc => sc.DeviceName.Equals(s.MonitorDeviceName)))
-        {
-            reason = $"Monitor nicht verfügbar: {s.MonitorDeviceName}";
-            return false;
-        }
-
         return true;
     }
 }

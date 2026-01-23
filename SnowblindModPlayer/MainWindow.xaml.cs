@@ -1,6 +1,4 @@
-using System;
 using System.Windows;
-using Wpf.Ui.Controls;
 
 namespace SnowblindModPlayer;
 
@@ -9,11 +7,11 @@ public partial class MainWindow
     public MainWindow()
     {
         InitializeComponent();
+        DialogService.Initialize(RootDialogHost);
     }
 
     private void Nav_Loaded(object sender, RoutedEventArgs e)
     {
-        // Default page
         Nav.Navigate(typeof(Pages.VideosPage));
     }
 
@@ -23,16 +21,15 @@ public partial class MainWindow
         HintBar.IsOpen = true;
     }
 
-    public void RefreshFromAppState()
+    public void RefreshBindings()
     {
-        // Force refresh of current page by navigating to itself
-        // This is a simple MVP approach.
-        // If you prefer, we can implement INavigationAware in pages and refresh there.
+        // Force pages to refresh bindings by recreating their DataContext on next navigation.
+        // (MVP approach) The pages themselves bind to App.Instance state on Loaded.
     }
 
     protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
     {
-        // X button -> minimize to tray
+        // Close button -> to tray
         e.Cancel = true;
         Hide();
     }

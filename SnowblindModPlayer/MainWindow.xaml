@@ -6,12 +6,21 @@
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         xmlns:pages="clr-namespace:SnowblindModPlayer.Pages"
         mc:Ignorable="d"
-        Title="Snowblind-Mod Player" Height="700" Width="1050"
+        Title="Snowblind-Mod Player" Height="740" Width="1100"
         WindowStartupLocation="CenterScreen">
 
     <Grid>
-        <ui:NavigationView x:Name="Nav" PaneDisplayMode="Left" IsPaneOpen="True" OpenPaneLength="220"
-                           Loaded="Nav_Loaded">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- A: Title bar buttons -->
+        <ui:TitleBar x:Name="AppTitleBar" Grid.Row="0" Title="Snowblind-Mod Player"
+                     ShowMinimize="True" ShowMaximize="True" ShowClose="True" ShowHelp="False" />
+
+        <ui:NavigationView x:Name="Nav" Grid.Row="1" PaneDisplayMode="Left" IsPaneOpen="True" OpenPaneLength="220"
+                           Loaded="Nav_Loaded" IsBackButtonVisible="Collapsed">
 
             <ui:NavigationView.MenuItems>
                 <ui:NavigationViewItem Content="Videos" Icon="{ui:SymbolIcon Video24}" TargetPageType="{x:Type pages:VideosPage}" />
@@ -23,8 +32,10 @@
 
         </ui:NavigationView>
 
-        <!-- Hint banner overlay -->
-        <ui:InfoBar x:Name="HintBar" VerticalAlignment="Top" Margin="16" 
+        <!-- B: Modern dialogs host -->
+        <ContentPresenter x:Name="RootDialogHost" Grid.RowSpan="2"/>
+
+        <ui:InfoBar x:Name="HintBar" Grid.RowSpan="2" VerticalAlignment="Top" Margin="16"
                    Severity="Warning" IsOpen="False" Title="Hinweis" />
     </Grid>
 </ui:FluentWindow>

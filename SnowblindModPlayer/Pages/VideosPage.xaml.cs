@@ -2,8 +2,10 @@ using Microsoft.Win32;
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 namespace SnowblindModPlayer.Pages;
 
@@ -15,44 +17,43 @@ public partial class VideosPage
     {
         InitializeComponent();
 
+        ViewModeCombo.SelectedIndex = 1; // Default: Miniaturen
+
         Loaded += (_, __) => Reload();
 
-        AddBtn.Click += (_, __) => AddVideos();
-        RemoveBtn.Click += (_, __) => RemoveSelected();
-        SetDefaultBtn.Click += (_, __) => SetDefaultFromSelection();
+        AddBtn.Click += async (_, __) => await AddVideosAsync();
+        RemoveBtn.Click += async (_, __) => await RemoveSelectedAsync();
+        SetDefaultBtn.Click += async (_, __) => await SetDefaultFromSelectionAsync();
         ViewModeCombo.SelectionChanged += (_, __) => UpdateViewMode();
     }
 
     private void Reload()
     {
         _library = App.Instance.CurrentLibrary;
-        DataContext = new VideosPageVm(_library, App.Instance.CurrentSettings.DefaultVideoId);
+        DataContext = _library;
+        App.Instance.ApplyDefaultMarkers();
         UpdateViewMode();
     }
 
     private void UpdateViewMode()
     {
-        var mode = ((ComboBoxItem)ViewModeCombo.SelectedItem).Content?.ToString() ?? "Liste";
-        if (mode == "Miniaturen")
+        var mode = ((ComboBoxItem)ViewModeCombo.SelectedItem).Content?.ToString() ?? "Miniaturen";
+        if (mode == "Liste")
         {
-            ListView.Visibility = Visibility.Collapsed;
-            ThumbList.Visibility = Visibility.Visible;
+            ListView.Visibility = Visibility.Visible;
+            ThumbScroll.Visibility = Visibility.Collapsed;
         }
         else
         {
-            ThumbList.Visibility = Visibility.Collapsed;
-            ListView.Visibility = Visibility.Visible;
+            ListView.Visibility = Visibility.Collapsed;
+            ThumbScroll.Visibility = Visibility.Visible;
         }
     }
 
     private VideoItem? GetSelected()
-    {
-        if (ThumbList.Visibility == Visibility.Visible)
-            return ThumbList.SelectedItem as VideoItem;
-        return ListView.SelectedItem as VideoItem;
-    }
+        => ListView.Visibility == Visibility.Visible ? ListView.SelectedItem as VideoItem : ThumbList.SelectedItem as VideoItem;
 
-    private void AddVideos()
+    private async Task AddVideosAsync()
     {
         var dlg = new Microsoft.Win32.OpenFileDialog
         {
@@ -68,11 +69,18 @@ public partial class VideosPage
             {
                 var item = MediaImportService.ImportToAppData(file);
                 _library.Items.Add(item);
+
+                // set first imported as default if none
+                if (string.IsNullOrWhiteSpace(App.Instance.CurrentSettings.DefaultVideoId))
+                {
+                    var s = App.Instance.CurrentSettings;
+                    s.DefaultVideoId = item.Id;
+                    App.Instance.SaveSettings(s);
+                }
             }
             catch (Exception ex)
             {
-                System.Windows.MessageBox.Show($"Import fehlgeschlagen: {Path.GetFileName(file)} {ex.Message}",
-                    "Snowblind-Mod Player", MessageBoxButton.OK, MessageBoxImage.Error);
+                await DialogService.ShowMessageAsync("Import fehlgeschlagen", $"{Path.GetFileName(file)}\n{ex.Message}");
             }
         }
 
@@ -80,65 +88,58 @@ public partial class VideosPage
         Reload();
     }
 
-    private void RemoveSelected()
+    private async Task RemoveSelectedAsync()
     {
         var selected = GetSelected();
         if (selected == null)
         {
-            System.Windows.MessageBox.Show("Bitte ein Video auswählen.", "Snowblind-Mod Player");
+            await DialogService.ShowMessageAsync("Kein Video ausgewählt", "Bitte ein Video auswählen.");
             return;
         }
 
-        if (System.Windows.MessageBox.Show($"Video entfernen? {selected.DisplayName}", "Snowblind-Mod Player",
-            MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes)
-            return;
+        var ok = await DialogService.ConfirmAsync("Video entfernen", $"Möchtest du dieses Video entfernen?\n\n{selected.DisplayName}", primary: "Entfernen");
+        if (!ok) return;
 
         try { MediaImportService.RemoveFromAppData(selected); } catch { }
 
         _library.Items.Remove(selected);
 
-        // If removed default -> clear default
         var s = App.Instance.CurrentSettings;
         if (s.DefaultVideoId == selected.Id)
-        {
             s.DefaultVideoId = _library.Items.FirstOrDefault()?.Id ?? "";
-            App.Instance.SaveSettings(s);
-        }
 
+        App.Instance.SaveSettings(s);
         App.Instance.SaveLibrary(_library);
         Reload();
     }
 
-    private void SetDefaultFromSelection()
+    private async Task SetDefaultFromSelectionAsync()
     {
         var selected = GetSelected();
         if (selected == null)
         {
-            System.Windows.MessageBox.Show("Bitte ein Video auswählen.", "Snowblind-Mod Player");
+            await DialogService.ShowMessageAsync("Kein Video ausgewählt", "Bitte ein Video auswählen.");
             return;
         }
 
         var s = App.Instance.CurrentSettings;
         s.DefaultVideoId = selected.Id;
         App.Instance.SaveSettings(s);
+        App.Instance.ApplyDefaultMarkers();
 
-        Reload();
-        System.Windows.MessageBox.Show($"Defaultvideo gesetzt: {selected.DisplayName}",
-            "Snowblind-Mod Player", MessageBoxButton.OK, MessageBoxImage.Information);
+        ListView.SelectedItem = selected;
+        ThumbList.SelectedItem = selected;
+
+        await DialogService.ToastAsync($"Default gesetzt: {selected.DisplayName}");
     }
-}
 
-internal class VideosPageVm
-{
-    public System.Collections.ObjectModel.ObservableCollection<VideoItem> Items { get; }
-
-    public VideosPageVm(MediaLibrary lib, string defaultId)
+    // C: ensure trackpad scrolling works even when mouse is over inner elements
+    private void OnPreviewMouseWheel(object sender, MouseWheelEventArgs e)
     {
-        Items = lib.Items;
-        foreach (var it in Items)
+        if (ThumbScroll.Visibility == Visibility.Visible)
         {
-            it.IsDefault = it.Id == defaultId;
-            it.DefaultStarOpacity = it.IsDefault ? 1.0 : 0.15;
+            ThumbScroll.ScrollToVerticalOffset(ThumbScroll.VerticalOffset - e.Delta);
+            e.Handled = true;
         }
     }
 }

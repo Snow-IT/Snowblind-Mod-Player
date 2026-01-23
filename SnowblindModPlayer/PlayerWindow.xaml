@@ -4,12 +4,32 @@
         xmlns:vlc="clr-namespace:LibVLCSharp.WPF;assembly=LibVLCSharp.WPF"
         WindowStyle="None" ResizeMode="NoResize" Topmost="True"
         ShowInTaskbar="False" Background="Black" AllowsTransparency="False"
-        KeyDown="Window_KeyDown" MouseLeftButtonDown="Window_MouseLeftButtonDown"
+        KeyDown="Window_KeyDown" MouseMove="Window_MouseMove" MouseLeftButtonDown="Window_MouseLeftButtonDown"
         Focusable="True">
+
     <Grid>
         <vlc:VideoView x:Name="VideoView" />
-        <Border VerticalAlignment="Bottom" Background="#66000000" Padding="10" Margin="16" CornerRadius="8" HorizontalAlignment="Left">
-            <TextBlock Foreground="White" Opacity="0.85" Text="Space: Pause | ESC: Exit fullscreen / Stop | F11: Toggle fullscreen"/>
-        </Border>
+
+        <!-- D: Minimal OSD overlay (auto-hide) -->
+        <Grid x:Name="Osd" VerticalAlignment="Bottom" Margin="18" Visibility="Collapsed">
+            <Border Background="#AA000000" CornerRadius="12" Padding="12">
+                <StackPanel Orientation="Vertical" Width="520">
+                    <TextBlock x:Name="OsdLine1" Foreground="#F2F2F2" FontWeight="SemiBold" Text="" />
+                    <TextBlock Foreground="#CCFFFFFF" Margin="0,2,0,8" Text="Space/Klick: Pause | ←/→: Seek | +/- oder ↑/↓: Volume | M: Mute | F11: Fullscreen | ESC: Exit/Stop" />
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock x:Name="TimeText" Grid.Column="0" Foreground="#F2F2F2" Margin="0,0,10,0" Text="00:00 / 00:00" />
+                        <ProgressBar x:Name="Progress" Grid.Column="1" Height="8" VerticalAlignment="Center" Minimum="0" Maximum="1" Value="0" />
+                        <TextBlock x:Name="VolText" Grid.Column="2" Foreground="#F2F2F2" Margin="10,0,0,0" Text="Vol 100" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </Grid>
     </Grid>
 </Window>
