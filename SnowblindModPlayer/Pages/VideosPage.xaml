@@ -9,32 +9,37 @@
 
     <Grid Margin="18">
         <Grid.RowDefinitions>
+            <!-- 0: fixierte Toolbar -->
             <RowDefinition Height="Auto"/>
+            <!-- 1: scrollbarer Content -->
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- Toolbar: Namen müssen mit dem Code-Behind übereinstimmen -->
-        <DockPanel Grid.Row="0" LastChildFill="False" Margin="0,0,0,12">
-            <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
-                <Button x:Name="AddBtn" Content="+ Hinzufügen" Width="120" Margin="0,0,8,0"/>
-                <Button x:Name="RemoveBtn" Content="Entfernen" Width="120" Margin="0,0,8,0"/>
-                <Button x:Name="SetDefaultBtn" Content="Als Default" Width="120"/>
-            </StackPanel>
+        <!-- Toolbar: fixiert oben -->
+        <Border Grid.Row="0" Background="Transparent" Padding="0,0,0,8">
+            <DockPanel LastChildFill="False">
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
+                    <Button x:Name="AddBtn" Content="+ Hinzufügen" Width="120" Margin="0,0,8,0"/>
+                    <Button x:Name="RemoveBtn" Content="Entfernen" Width="120" Margin="0,0,8,0"/>
+                    <Button x:Name="SetDefaultBtn" Content="Als Default" Width="120"/>
+                </StackPanel>
 
-            <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
-                <TextBlock VerticalAlignment="Center" Margin="0,0,8,0" Opacity="0.8" Text="Ansicht"/>
-                <ComboBox x:Name="ViewModeCombo" Width="160">
-                    <ComboBoxItem Content="Liste" />
-                    <ComboBoxItem Content="Miniaturen" IsSelected="True" />
-                </ComboBox>
-            </StackPanel>
-        </DockPanel>
+                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+                    <TextBlock VerticalAlignment="Center" Margin="0,0,8,0" Opacity="0.8" Text="Ansicht"/>
+                    <ComboBox x:Name="ViewModeCombo" Width="160">
+                        <ComboBoxItem Content="Liste" />
+                        <ComboBoxItem Content="Miniaturen" IsSelected="True" />
+                    </ComboBox>
+                </StackPanel>
+            </DockPanel>
+        </Border>
 
+        <!-- List-Ansicht (versteckt / sichtbar je nach Mode) -->
         <ListView x:Name="ListView" Grid.Row="1" ItemsSource="{Binding Items}" SelectionMode="Single" Visibility="Collapsed">
             <!-- List-Ansicht unverändert -->
         </ListView>
 
-        <!-- Thumb-Ansicht: ListBox übernimmt ScrollViewer; kein externes ScrollViewer verwenden -->
+        <!-- Thumb-Ansicht: ListBox mit internem ScrollViewer + WrapPanel Horizonal -->
         <ListBox x:Name="ThumbList" Grid.Row="1" ItemsSource="{Binding Items}" SelectionMode="Single"
                  Background="Transparent" BorderThickness="0"
                  ScrollViewer.VerticalScrollBarVisibility="Auto"
@@ -42,21 +47,25 @@
                  PreviewMouseWheel="OnPreviewMouseWheel">
             <ListBox.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <!-- Orientation="Vertical" + ItemWidth erzeugt Kachel-Layout (mehrere Spalten) -->
-                    <WrapPanel Orientation="Vertical" ItemWidth="220" />
+                    <!-- Explorer‑like: füllt Zeile von links nach rechts, wrappt nach unten -->
+                    <WrapPanel Orientation="Horizontal" ItemWidth="240" />
                 </ItemsPanelTemplate>
             </ListBox.ItemsPanel>
 
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <Border Margin="6" Padding="8" CornerRadius="10" BorderThickness="1" BorderBrush="#33FFFFFF" Background="#11000000" Width="220">
+                    <!-- Kachelbreite entspricht ItemWidth -->
+                    <Border Margin="6" Padding="8" CornerRadius="10" BorderThickness="1" BorderBrush="#33FFFFFF" Background="#11000000" Width="240">
                         <DockPanel LastChildFill="True">
-                            <Border Height="125" Background="#22000000" CornerRadius="8" DockPanel.Dock="Top">
-                                <Image Source="{Binding ThumbnailPath}" Stretch="Uniform" />
+                            <Border Height="140" Background="#22000000" CornerRadius="8" DockPanel.Dock="Top">
+                                <!-- UniformToFill entspricht üblichen Explorer‑Thumbnails -->
+                                <Image Source="{Binding ThumbnailPath}" Stretch="UniformToFill" />
                             </Border>
+
                             <StackPanel Margin="0,8,0,0">
                                 <TextBlock Text="{Binding DisplayName}" TextWrapping="Wrap" Foreground="#F2F2F2"/>
                             </StackPanel>
+
                             <TextBlock Text="★" Opacity="{Binding DefaultStarOpacity}" FontSize="16" Foreground="#FF4CA6FF"
                                        VerticalAlignment="Top" HorizontalAlignment="Right" Margin="4" />
                         </DockPanel>

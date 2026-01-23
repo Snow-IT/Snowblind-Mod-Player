@@ -20,7 +20,8 @@ public partial class VideosPage
     {
         InitializeComponent();
 
-        ViewModeCombo!.SelectedIndex = 1; // Default: Miniaturen
+        // Default: Miniaturen
+        ViewModeCombo!.SelectedIndex = 1;
 
         Loaded += (_, __) => Reload();
 
@@ -70,7 +71,7 @@ public partial class VideosPage
         {
             try
             {
-                var item = await MediaImportService.ImportToAppDataAsync(file); // async implemented
+                var item = await MediaImportService.ImportToAppDataAsync(file);
                 _library.Items.Add(item);
 
                 if (string.IsNullOrWhiteSpace(App.Instance.CurrentSettings.DefaultVideoId))
