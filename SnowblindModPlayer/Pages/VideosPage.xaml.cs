@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using Microsoft.Win32.TaskScheduler;
 using Task = System.Threading.Tasks.Task;
 
@@ -19,14 +20,14 @@ public partial class VideosPage
     {
         InitializeComponent();
 
-        ViewModeCombo.SelectedIndex = 1; // Default: Miniaturen
+        ViewModeCombo!.SelectedIndex = 1; // Default: Miniaturen
 
         Loaded += (_, __) => Reload();
 
-        AddBtn.Click += async (_, __) => await AddVideosAsync();
-        RemoveBtn.Click += async (_, __) => await RemoveSelectedAsync();
-        SetDefaultBtn.Click += async (_, __) => await SetDefaultFromSelectionAsync();
-        ViewModeCombo.SelectionChanged += (_, __) => UpdateViewMode();
+        AddBtn!.Click += async (_, __) => await AddVideosAsync();
+        RemoveBtn!.Click += async (_, __) => await RemoveSelectedAsync();
+        SetDefaultBtn!.Click += async (_, __) => await SetDefaultFromSelectionAsync();
+        ViewModeCombo!.SelectionChanged += (_, __) => UpdateViewMode();
     }
 
     private void Reload()
@@ -39,21 +40,21 @@ public partial class VideosPage
 
     private void UpdateViewMode()
     {
-        var mode = ((ComboBoxItem)ViewModeCombo.SelectedItem).Content?.ToString() ?? "Miniaturen";
+        var mode = ((ComboBoxItem)ViewModeCombo!.SelectedItem).Content?.ToString() ?? "Miniaturen";
         if (mode == "Liste")
         {
-            ListView.Visibility = Visibility.Visible;
-            ThumbScroll.Visibility = Visibility.Collapsed;
+            ListView!.Visibility = Visibility.Visible;
+            ThumbList!.Visibility = Visibility.Collapsed;
         }
         else
         {
-            ListView.Visibility = Visibility.Collapsed;
-            ThumbScroll.Visibility = Visibility.Visible;
+            ListView!.Visibility = Visibility.Collapsed;
+            ThumbList!.Visibility = Visibility.Visible;
         }
     }
 
     private VideoItem? GetSelected()
-        => ListView.Visibility == Visibility.Visible ? ListView.SelectedItem as VideoItem : ThumbList.SelectedItem as VideoItem;
+        => ListView!.Visibility == Visibility.Visible ? ListView!.SelectedItem as VideoItem : ThumbList!.SelectedItem as VideoItem;
 
     private async Task AddVideosAsync()
     {
@@ -69,11 +70,9 @@ public partial class VideosPage
         {
             try
             {
-                // Async import — vermeidet UI-Blocking beim Kopieren und Thumbnail-Generierung
-                var item = await MediaImportService.ImportToAppDataAsync(file);
+                var item = await MediaImportService.ImportToAppDataAsync(file); // async implemented
                 _library.Items.Add(item);
 
-                // set first imported as default if none
                 if (string.IsNullOrWhiteSpace(App.Instance.CurrentSettings.DefaultVideoId))
                 {
                     var s = App.Instance.CurrentSettings;
@@ -130,19 +129,35 @@ public partial class VideosPage
         App.Instance.SaveSettings(s);
         App.Instance.ApplyDefaultMarkers();
 
-        ListView.SelectedItem = selected;
-        ThumbList.SelectedItem = selected;
+        ListView!.SelectedItem = selected;
+        ThumbList!.SelectedItem = selected;
 
         await DialogService.ToastAsync($"Default gesetzt: {selected.DisplayName}");
     }
 
-    // C: ensure trackpad scrolling works even when mouse is over inner elements
+    // Trackpad / Mausrad scrolling: finde ScrollViewer innerhalb von ThumbList und scrolle
     private void OnPreviewMouseWheel(object sender, MouseWheelEventArgs e)
     {
-        if (ThumbScroll.Visibility == Visibility.Visible)
+        if (ThumbList == null || ThumbList.Visibility != Visibility.Visible) return;
+
+        var sv = FindDescendantScrollViewer(ThumbList);
+        if (sv != null)
         {
-            ThumbScroll.ScrollToVerticalOffset(ThumbScroll.VerticalOffset - e.Delta);
+            sv.ScrollToVerticalOffset(sv.VerticalOffset - e.Delta);
             e.Handled = true;
         }
+    }
+
+    private ScrollViewer? FindDescendantScrollViewer(DependencyObject root)
+    {
+        if (root == null) return null;
+        for (int i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
+        {
+            var child = VisualTreeHelper.GetChild(root, i);
+            if (child is ScrollViewer sv) return sv;
+            var found = FindDescendantScrollViewer(child);
+            if (found != null) return found;
+        }
+        return null;
     }
 }

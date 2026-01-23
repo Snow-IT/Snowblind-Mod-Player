@@ -60,9 +60,13 @@ public static class MediaImportService
             File.Delete(item.ThumbnailPath);
     }
 
-    internal static async Task<VideoItem> ImportToAppDataAsync(string file)
+    // Async wrapper führt die synchrone Arbeit im Background-Thread aus
+    internal static Task<VideoItem> ImportToAppDataAsync(string file)
     {
-        throw new NotImplementedException();
+        if (string.IsNullOrWhiteSpace(file))
+            throw new ArgumentException("file is required", nameof(file));
+
+        return Task.Run(() => ImportToAppData(file));
     }
 
     private static void TryGenerateThumbnail(string videoPath, string thumbPath)
