@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Microsoft.Win32.TaskScheduler;
+using Task = System.Threading.Tasks.Task;
 
 namespace SnowblindModPlayer.Pages;
 
@@ -67,7 +69,8 @@ public partial class VideosPage
         {
             try
             {
-                var item = MediaImportService.ImportToAppData(file);
+                // Async import — vermeidet UI-Blocking beim Kopieren und Thumbnail-Generierung
+                var item = await MediaImportService.ImportToAppDataAsync(file);
                 _library.Items.Add(item);
 
                 // set first imported as default if none

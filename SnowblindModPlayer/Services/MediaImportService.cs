@@ -60,6 +60,11 @@ public static class MediaImportService
             File.Delete(item.ThumbnailPath);
     }
 
+    internal static async Task<VideoItem> ImportToAppDataAsync(string file)
+    {
+        throw new NotImplementedException();
+    }
+
     private static void TryGenerateThumbnail(string videoPath, string thumbPath)
     {
         try

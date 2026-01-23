@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="LibVLCSharp.WPF" Version="3.9.5" />
+    <PackageReference Include="TaskScheduler" Version="2.12.2" />
     <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.23" />
     <PackageReference Include="WPF-UI" Version="4.2.0" />
   </ItemGroup>
