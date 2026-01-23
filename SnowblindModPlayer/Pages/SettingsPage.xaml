@@ -1,16 +1,71 @@
-<Page x:Class="SnowblindModPlayer.Pages.SettingsPage" PreviewMouseWheel="OnPreviewMouseWheel"
+<Page x:Class="SnowblindModPlayer.Pages.SettingsPage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-      xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
+      xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+      xmlns:local="clr-namespace:SnowblindModPlayer">
 
-    <ScrollViewer x:Name="SettingsScroll" VerticalScrollBarVisibility="Auto" PanningMode="VerticalOnly" PreviewMouseWheel="OnPreviewMouseWheel">
-        <StackPanel Margin="18">
-            <ui:Card>
+    <ScrollViewer x:Name="SettingsScroll" VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="18" Orientation="Vertical" >
+
+            <ui:Card Margin="0,0,0,12">
                 <StackPanel Margin="14">
-                    <TextBlock FontSize="18" FontWeight="SemiBold" Text="Settings (Placeholder)"/>
-                    <TextBlock Opacity="0.75" Text="C + D sind umgesetzt. Settings werden als nächstes wieder vollständig aufgebaut."/>
+                    <TextBlock FontSize="18" FontWeight="SemiBold" Text="Autostart" />
+
+                    <WrapPanel Margin="0,12,0,0" VerticalAlignment="Center">
+                        <CheckBox x:Name="AutostartCheck" Content="Autostart aktivieren (Task Scheduler)" Margin="0,0,12,0"/>
+                        <Button x:Name="AutostartApplyBtn" Content="Übernehmen" Width="120" />
+                    </WrapPanel>
+
+                    <TextBlock x:Name="AutostartStatus" Margin="0,8,0,0" Opacity="0.8" />
                 </StackPanel>
             </ui:Card>
+
+            <ui:Card Margin="0,0,0,12">
+                <StackPanel Margin="14">
+                    <TextBlock FontSize="18" FontWeight="SemiBold" Text="Wiedergabe" />
+
+                    <Grid Margin="0,12,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                            <CheckBox x:Name="AutoPlayCheck" Content="Autoplay beim Start"/>
+                            <CheckBox x:Name="FullscreenCheck" Content="Vollbild" Margin="0,6,0,0"/>
+                            <CheckBox x:Name="LoopCheck" Content="Loop" Margin="0,6,0,0"/>
+                            <CheckBox x:Name="MuteCheck" Content="Mute" Margin="0,6,0,0"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="Lautstärke" />
+                            <Slider x:Name="VolumeSlider" Minimum="0" Maximum="100" Value="100" />
+
+                            <TextBlock Margin="0,10,0,0" Text="Startverzögerung (Sek.)" />
+                            <ui:NumberBox x:Name="DelayBox" Minimum="0" Maximum="300" Value="0" />
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </ui:Card>
+
+            <ui:Card Margin="0,0,0,12">
+                <StackPanel Margin="14">
+                    <TextBlock FontSize="18" FontWeight="SemiBold" Text="Default-Video" />
+                    <ComboBox x:Name="DefaultVideoCombo" Margin="0,12,0,0" DisplayMemberPath="DisplayName" />
+                    <TextBlock Margin="0,6,0,0" Opacity="0.7" Text="Hinweis: Tray-Schnellauswahl spielt temporär ab und ändert das Defaultvideo nicht." />
+                </StackPanel>
+            </ui:Card>
+
+            <ui:Card Margin="0,0,0,12">
+                <StackPanel Margin="14">
+                    <TextBlock FontSize="18" FontWeight="SemiBold" Text="Monitor" />
+                    <local:MonitorPicker x:Name="MonitorPicker" Margin="0,12,0,0" Height="190" />
+                    <TextBlock x:Name="MonitorHint" Margin="0,6,0,0" Opacity="0.75" />
+                </StackPanel>
+            </ui:Card>
+
+            <WrapPanel HorizontalAlignment="Right" Margin="0,8,0,0">
+                <Button x:Name="SaveBtn" Content="Speichern" Width="120" />
+            </WrapPanel>
+
         </StackPanel>
     </ScrollViewer>
 </Page>
