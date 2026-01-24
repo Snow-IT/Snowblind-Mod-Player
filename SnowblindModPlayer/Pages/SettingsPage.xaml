@@ -34,6 +34,7 @@
                             <CheckBox x:Name="FullscreenCheck" Content="Vollbild" Margin="0,6,0,0"/>
                             <CheckBox x:Name="LoopCheck" Content="Loop" Margin="0,6,0,0"/>
                             <CheckBox x:Name="MuteCheck" Content="Mute" Margin="0,6,0,0"/>
+                            <CheckBox x:Name="AdvancedLoggingCheck" Content="Erweitertes Logging" Margin="0,6,0,0"/>
                         </StackPanel>
                         <StackPanel Grid.Column="1">
                             <TextBlock Text="Lautstärke" />
@@ -61,10 +62,6 @@
                     <TextBlock x:Name="MonitorHint" Margin="0,6,0,0" Opacity="0.75" />
                 </StackPanel>
             </ui:Card>
-
-            <WrapPanel HorizontalAlignment="Right" Margin="0,8,0,0">
-                <Button x:Name="SaveBtn" Content="Speichern" Width="120" />
-            </WrapPanel>
 
         </StackPanel>
     </ScrollViewer>

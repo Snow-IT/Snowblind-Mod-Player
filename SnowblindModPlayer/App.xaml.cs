@@ -24,6 +24,11 @@ public partial class App : System.Windows.Application
         MediaLibraryStore.EnsureFolders();
         CurrentSettings = SettingsStore.Load();
         CurrentLibrary = MediaLibraryStore.Load();
+
+        // LogService beim Start initialisieren und Log-Level anwenden
+        LogService.Initialize();
+        try { LogService.SetVerbose(CurrentSettings.AdvancedLogging); } catch { }
+
         ApplyDefaultMarkers();
 
         _player = new PlayerWindow();
@@ -44,7 +49,14 @@ public partial class App : System.Windows.Application
             return;
         }
 
-        // Autoplay directly (as desired)
+        // Wenn Autoplay deaktiviert ist: Hauptfenster zeigen und nicht automatisch abspielen
+        if (!CurrentSettings.AutoPlayOnStart)
+        {
+            ShowMainWindow();
+            return;
+        }
+
+        // Autoplay direkt (nur wenn aktiviert)
         var ok = SettingsValidator.IsReadyToAutoplay(CurrentSettings, CurrentLibrary, out var reason);
         if (!ok)
         {
@@ -62,6 +74,8 @@ public partial class App : System.Windows.Application
     {
         CurrentSettings = newSettings;
         SettingsStore.Save(CurrentSettings);
+        // AdvancedLogging sofort anwenden wenn Settings geändert werden
+        try { LogService.SetVerbose(CurrentSettings.AdvancedLogging); } catch { }
         ApplyDefaultMarkers();
         _tray?.Update(CurrentLibrary);
     }

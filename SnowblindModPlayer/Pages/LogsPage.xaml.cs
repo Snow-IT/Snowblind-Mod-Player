@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using SnowblindModPlayer; // damit LogService ohne weiteren using gefunden wird
+using SnowblindModPlayer;
 
 namespace SnowblindModPlayer.Pages;
 
@@ -17,7 +17,8 @@ public partial class LogsPage : Page
         Loaded += (_, __) => _ = RefreshAsync();
     }
 
-    private async Task RefreshAsync()
+    // jetzt public: wird von MainWindow-TitleBar aufgerufen
+    public async Task RefreshAsync()
     {
         try
         {
@@ -50,35 +51,8 @@ public partial class LogsPage : Page
         }
     }
 
-    private async void RefreshBtn_Click(object sender, RoutedEventArgs e)
-    {
-        await RefreshAsync();
-    }
-
-    private async void LogList_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        var fi = LogList.SelectedItem as FileInfo;
-        if (fi == null)
-        {
-            LogContent.Text = string.Empty;
-            return;
-        }
-
-        try
-        {
-            using var stream = new FileStream(fi.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-            using var reader = new StreamReader(stream);
-            var text = await reader.ReadToEndAsync();
-            LogContent.Text = text;
-            LogContent.ScrollToHome();
-        }
-        catch (Exception ex)
-        {
-            await DialogService.ShowMessageAsync("Fehler beim Laden", ex.Message);
-        }
-    }
-
-    private async void DeleteBtn_Click(object sender, RoutedEventArgs e)
+    // öffentliche Lösch-Operation (wird von TitleBar-Button aufgerufen)
+    public async Task DeleteSelectedAsync()
     {
         var fi = LogList.SelectedItem as FileInfo;
         if (fi == null)
@@ -102,7 +76,8 @@ public partial class LogsPage : Page
         }
     }
 
-    private void OpenFolderBtn_Click(object sender, RoutedEventArgs e)
+    // öffnet den Logs-Ordner (aufgerufen aus TitleBar)
+    public void OpenFolder()
     {
         try
         {
@@ -114,6 +89,31 @@ public partial class LogsPage : Page
         catch (Exception ex)
         {
             _ = DialogService.ShowMessageAsync("Ordner öffnen fehlgeschlagen", ex.Message);
+        }
+    }
+
+    private async void LogList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        var fi = LogList.SelectedItem as FileInfo;
+        if (fi == null)
+        {
+            LogContent.Text = string.Empty;
+            return;
+        }
+
+        try
+        {
+            using var stream = new FileStream(fi.FullName, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            using var reader = new StreamReader(stream);
+            var text = await reader.ReadToEndAsync();
+            LogContent.Text = text;
+
+            LogContent.CaretIndex = 0;
+            LogContent.ScrollToHome();
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowMessageAsync("Fehler beim Laden", ex.Message);
         }
     }
 }

@@ -8,62 +8,92 @@
     </Page.Resources>
 
     <Grid Margin="18">
+        <!-- Single content area - Toolbar entfernt, Top-Buttons liegen nun im MainWindow -->
         <Grid.RowDefinitions>
-            <!-- 0: fixierte Toolbar -->
-            <RowDefinition Height="Auto"/>
-            <!-- 1: scrollbarer Content -->
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <!-- Toolbar: fixiert oben -->
-        <Border Grid.Row="0" Background="Transparent" Padding="0,0,0,8">
-            <DockPanel LastChildFill="False">
-                <StackPanel Orientation="Horizontal" DockPanel.Dock="Left">
-                    <Button x:Name="AddBtn" Content="+ Hinzufügen" Width="120" Margin="0,0,8,0"/>
-                    <Button x:Name="RemoveBtn" Content="Entfernen" Width="120" Margin="0,0,8,0"/>
-                    <Button x:Name="SetDefaultBtn" Content="Als Default" Width="120"/>
-                </StackPanel>
+        <!-- List-Ansicht (sichtbar je nach Mode) -->
+        <ListView x:Name="ListView" ItemsSource="{Binding Items}" SelectionMode="Single" Visibility="Collapsed"
+                  Background="Transparent" BorderThickness="0" Padding="8"
+                  ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                  ScrollViewer.CanContentScroll="False">
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <Setter Property="Margin" Value="6"/>
+                    <Setter Property="Padding" Value="8"/>
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ListViewItem">
+                                <Border x:Name="Bd" CornerRadius="8" Background="{TemplateBinding Background}">
+                                    <ContentPresenter Margin="4"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="Bd" Property="Background" Value="#22FFFFFF"/>
+                                    </Trigger>
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter TargetName="Bd" Property="Background" Value="#332B6FFF"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </ListView.ItemContainerStyle>
 
-                <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
-                    <TextBlock VerticalAlignment="Center" Margin="0,0,8,0" Opacity="0.8" Text="Ansicht"/>
-                    <ComboBox x:Name="ViewModeCombo" Width="160">
-                        <ComboBoxItem Content="Liste" />
-                        <ComboBoxItem Content="Miniaturen" IsSelected="True" />
-                    </ComboBox>
-                </StackPanel>
-            </DockPanel>
-        </Border>
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <Grid Margin="4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="120"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
 
-        <!-- List-Ansicht (versteckt / sichtbar je nach Mode) -->
-        <ListView x:Name="ListView" Grid.Row="1" ItemsSource="{Binding Items}" SelectionMode="Single" Visibility="Collapsed">
-            <!-- List-Ansicht unverändert -->
+                        <Border Grid.Column="0" CornerRadius="8" Background="#FF1F1F1F" Height="70" Width="110" ClipToBounds="True">
+                            <Image Source="{Binding ThumbnailPath}" Stretch="UniformToFill"/>
+                        </Border>
+
+                        <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding DisplayName}" FontWeight="SemiBold" FontSize="14" Foreground="#F2F2F2" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Text="{Binding Duration}" Foreground="#888" FontSize="12"/>
+                            <TextBlock Text="{Binding StoredPath}" Foreground="#666" FontSize="11" TextTrimming="CharacterEllipsis" MaxHeight="34"/>
+                        </StackPanel>
+                    </Grid>
+                </DataTemplate>
+            </ListView.ItemTemplate>
         </ListView>
 
-        <!-- Thumb-Ansicht: ListBox mit internem ScrollViewer + WrapPanel Horizonal -->
-        <ListBox x:Name="ThumbList" Grid.Row="1" ItemsSource="{Binding Items}" SelectionMode="Single"
+        <!-- Thumb-Ansicht: ListBox mit internem ScrollViewer + WrapPanel Horizontal -->
+        <ListBox x:Name="ThumbList" ItemsSource="{Binding Items}" SelectionMode="Single"
                  Background="Transparent" BorderThickness="0"
+                 Padding="12,0,24,12"
                  ScrollViewer.VerticalScrollBarVisibility="Auto"
                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                 ScrollViewer.CanContentScroll="False"
                  PreviewMouseWheel="OnPreviewMouseWheel">
             <ListBox.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <!-- Explorer‑like: füllt Zeile von links nach rechts, wrappt nach unten -->
-                    <WrapPanel Orientation="Horizontal" ItemWidth="240" />
+                    <!-- Explorer-like: füllt Zeile von links nach rechts, wrappt nach unten -->
+                    <WrapPanel Orientation="Horizontal" ItemWidth="240" ItemHeight="220" Margin="0" />
                 </ItemsPanelTemplate>
             </ListBox.ItemsPanel>
 
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <!-- Kachelbreite entspricht ItemWidth -->
-                    <Border Margin="6" Padding="8" CornerRadius="10" BorderThickness="1" BorderBrush="#33FFFFFF" Background="#11000000" Width="240">
+                    <Border Margin="6" Padding="8" CornerRadius="10" BorderThickness="1" BorderBrush="#33FFFFFF" Background="#11000000" Width="240" Height="220" SnapsToDevicePixels="True">
                         <DockPanel LastChildFill="True">
-                            <Border Height="140" Background="#22000000" CornerRadius="8" DockPanel.Dock="Top">
+                            <Border Height="140" Background="#22000000" CornerRadius="8" DockPanel.Dock="Top" ClipToBounds="True">
                                 <!-- UniformToFill entspricht üblichen Explorer‑Thumbnails -->
                                 <Image Source="{Binding ThumbnailPath}" Stretch="UniformToFill" />
                             </Border>
 
                             <StackPanel Margin="0,8,0,0">
-                                <TextBlock Text="{Binding DisplayName}" TextWrapping="Wrap" Foreground="#F2F2F2"/>
+                                <TextBlock Text="{Binding DisplayName}" TextWrapping="Wrap" Foreground="#F2F2F2" FontWeight="SemiBold" MaxHeight="36" TextTrimming="CharacterEllipsis"/>
+                                <TextBlock Text="{Binding Duration}" Foreground="#AAA" FontSize="12" Margin="0,4,0,0"/>
                             </StackPanel>
 
                             <TextBlock Text="★" Opacity="{Binding DefaultStarOpacity}" FontSize="16" Foreground="#FF4CA6FF"

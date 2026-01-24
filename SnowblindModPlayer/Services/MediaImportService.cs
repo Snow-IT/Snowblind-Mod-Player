@@ -44,20 +44,33 @@ public static class MediaImportService
         if (File.Exists(thumbPath))
             item.ThumbnailPath = thumbPath;
 
+        // Log import
+        try { LogService.LogInfo($"Imported video: {item.DisplayName} ({item.Id}) -> {item.StoredPath}"); } catch { }
+
         return item;
     }
 
     public static void RemoveFromAppData(VideoItem item)
     {
-        if (!string.IsNullOrWhiteSpace(item.StoredPath))
+        try
         {
-            var dir = Directory.GetParent(item.StoredPath)?.FullName;
-            if (dir != null && Directory.Exists(dir))
-                Directory.Delete(dir, true);
-        }
+            // Log removal
+            LogService.LogInfo($"Removing video: {item.DisplayName} ({item.Id})");
 
-        if (!string.IsNullOrWhiteSpace(item.ThumbnailPath) && File.Exists(item.ThumbnailPath))
-            File.Delete(item.ThumbnailPath);
+            if (!string.IsNullOrWhiteSpace(item.StoredPath))
+            {
+                var dir = Directory.GetParent(item.StoredPath)?.FullName;
+                if (dir != null && Directory.Exists(dir))
+                    Directory.Delete(dir, true);
+            }
+
+            if (!string.IsNullOrWhiteSpace(item.ThumbnailPath) && File.Exists(item.ThumbnailPath))
+                File.Delete(item.ThumbnailPath);
+        }
+        catch (Exception ex)
+        {
+            LogService.LogError($"Error removing video {item?.Id}: {ex.Message}");
+        }
     }
 
     // Async wrapper führt die synchrone Arbeit im Background-Thread aus
@@ -86,6 +99,7 @@ public static class MediaImportService
         catch
         {
             // ignore thumbnail failures
+            LogService.LogDebug($"Thumbnail generation failed for {videoPath}");
         }
     }
 }

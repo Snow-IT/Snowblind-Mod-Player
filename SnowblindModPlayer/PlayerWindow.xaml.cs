@@ -46,6 +46,9 @@ public partial class PlayerWindow : Window
 
     public void Play(AppSettings settings, string path)
     {
+        // Log play-request
+        try { LogService.LogInfo($"Play requested: {path} (Fullscreen={settings.Fullscreen}, Loop={settings.Loop}, Mute={settings.Mute})"); } catch { }
+
         // Fenster positionieren / konfigurieren zuerst
         PlaceFullscreen(settings.Fullscreen, settings.MonitorDeviceName);
         ApplyPlayerSettings(settings);
@@ -67,10 +70,11 @@ public partial class PlayerWindow : Window
                 _media?.Dispose();
                 _media = new Media(_libVlc, new Uri(path));
                 _player.Play(_media);
+                LogService.LogInfo($"Playback started: {path}");
             }
-            catch
+            catch (Exception ex)
             {
-                // Nicht kritisch für Stabilität hier — Fehler werden im UI-Log sichtbar.
+                LogService.LogError($"Playback start failed: {ex.Message}");
             }
         }), DispatcherPriority.ApplicationIdle);
 
@@ -81,7 +85,16 @@ public partial class PlayerWindow : Window
 
     public void Stop()
     {
-        try { _player.Stop(); } catch { }
+        try
+        {
+            _player.Stop();
+            LogService.LogInfo("Playback stopped by user.");
+        }
+        catch (Exception ex)
+        {
+            LogService.LogError("Error stopping playback: " + ex.Message);
+        }
+
         _uiTimer.Stop();
         Hide();
     }

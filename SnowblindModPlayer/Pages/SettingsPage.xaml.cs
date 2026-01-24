@@ -2,86 +2,113 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace SnowblindModPlayer.Pages;
 
-public partial class SettingsPage
+public partial class SettingsPage : Page
 {
     private AppSettings _settings = new();
     private MediaLibrary _library = new();
+    private bool _isInitializing = false;
 
     public SettingsPage()
     {
         InitializeComponent();
 
-        SaveBtn.Click += async (_, __) => await SaveAsync();
-
-        AutostartApplyBtn.Click += async (_, __) =>
+        if (AutostartApplyBtn != null)
         {
-            try
+            AutostartApplyBtn.Click += async (_, __) =>
             {
-                if (AutostartCheck.IsChecked == true)
-                    TaskSchedulerService.EnableAutostart();
-                else
-                    TaskSchedulerService.DisableAutostart();
+                try
+                {
+                    if (AutostartCheck?.IsChecked == true)
+                        TaskSchedulerService.EnableAutostart();
+                    else
+                        TaskSchedulerService.DisableAutostart();
 
-                await RefreshAutostartStatus();
-            }
-            catch (Exception ex)
-            {
-                AutostartStatus.Text = "Fehler: " + ex.Message;
-            }
-        };
+                    await RefreshAutostartStatus();
+                }
+                catch (Exception ex)
+                {
+                    if (AutostartStatus != null) AutostartStatus.Text = "Fehler: " + ex.Message;
+                }
+            };
+        }
 
-        MonitorPicker.SelectionChanged += () => UpdateMonitorHint();
+        if (MonitorPicker != null)
+            MonitorPicker.SelectionChanged += () => { UpdateMonitorHint(); ApplySettingsFromControls(); };
+
+        if (AutoPlayCheck != null) { AutoPlayCheck.Checked += (_, __) => ApplySettingsFromControls(); AutoPlayCheck.Unchecked += (_, __) => ApplySettingsFromControls(); }
+        if (FullscreenCheck != null) { FullscreenCheck.Checked += (_, __) => ApplySettingsFromControls(); FullscreenCheck.Unchecked += (_, __) => ApplySettingsFromControls(); }
+        if (LoopCheck != null) { LoopCheck.Checked += (_, __) => ApplySettingsFromControls(); LoopCheck.Unchecked += (_, __) => ApplySettingsFromControls(); }
+        if (MuteCheck != null) { MuteCheck.Checked += (_, __) => ApplySettingsFromControls(); MuteCheck.Unchecked += (_, __) => ApplySettingsFromControls(); }
+        if (AdvancedLoggingCheck != null) { AdvancedLoggingCheck.Checked += (_, __) => ApplySettingsFromControls(); AdvancedLoggingCheck.Unchecked += (_, __) => ApplySettingsFromControls(); }
+
+        if (VolumeSlider != null) VolumeSlider.ValueChanged += (_, __) => ApplySettingsFromControls();
+        if (DelayBox != null) DelayBox.ValueChanged += (_, __) => ApplySettingsFromControls();
+
+        if (DefaultVideoCombo != null) DefaultVideoCombo.SelectionChanged += (_, __) => ApplySettingsFromControls();
 
         Loaded += (_, __) => Reload();
     }
 
     private void Reload()
     {
+        _isInitializing = true;
+
         _settings = App.Instance.CurrentSettings;
         _library = App.Instance.CurrentLibrary;
 
-        AutostartCheck.IsChecked = TaskSchedulerService.IsAutostartEnabled();
+        if (AutostartCheck != null) AutostartCheck.IsChecked = TaskSchedulerService.IsAutostartEnabled();
         _ = RefreshAutostartStatus();
 
-        AutoPlayCheck.IsChecked = _settings.AutoPlayOnStart;
-        FullscreenCheck.IsChecked = _settings.Fullscreen;
-        LoopCheck.IsChecked = _settings.Loop;
-        MuteCheck.IsChecked = _settings.Mute;
-        VolumeSlider.Value = _settings.Volume;
-        DelayBox.Value = _settings.StartDelaySeconds;
+        if (AutoPlayCheck != null) AutoPlayCheck.IsChecked = _settings.AutoPlayOnStart;
+        if (FullscreenCheck != null) FullscreenCheck.IsChecked = _settings.Fullscreen;
+        if (LoopCheck != null) LoopCheck.IsChecked = _settings.Loop;
+        if (MuteCheck != null) MuteCheck.IsChecked = _settings.Mute;
+        if (VolumeSlider != null) VolumeSlider.Value = _settings.Volume;
+        if (DelayBox != null) DelayBox.Value = _settings.StartDelaySeconds;
 
-        DefaultVideoCombo.ItemsSource = _library.Items;
-        DefaultVideoCombo.SelectedItem = _library.Items.FirstOrDefault(v => v.Id == _settings.DefaultVideoId);
+        if (AdvancedLoggingCheck != null) AdvancedLoggingCheck.IsChecked = _settings.AdvancedLogging;
 
-        MonitorPicker.LoadScreens(_settings.MonitorDeviceName);
+        if (DefaultVideoCombo != null)
+        {
+            DefaultVideoCombo.ItemsSource = _library.Items;
+            DefaultVideoCombo.SelectedItem = _library.Items.FirstOrDefault(v => v.Id == _settings.DefaultVideoId);
+        }
+
+        if (MonitorPicker != null) MonitorPicker.LoadScreens(_settings.MonitorDeviceName);
         UpdateMonitorHint();
+
+        _isInitializing = false;
     }
 
-    private async Task SaveAsync()
+    private void ApplySettingsFromControls()
     {
-        _settings.AutoPlayOnStart = AutoPlayCheck.IsChecked == true;
-        _settings.Fullscreen = FullscreenCheck.IsChecked == true;
-        _settings.Loop = LoopCheck.IsChecked == true;
-        _settings.Mute = MuteCheck.IsChecked == true;
-        _settings.Volume = (int)Math.Round(VolumeSlider.Value);
-        _settings.StartDelaySeconds = (int)(DelayBox.Value ?? 0);
+        if (_isInitializing) return;
 
-        if (DefaultVideoCombo.SelectedItem is VideoItem item)
+        _settings.AutoPlayOnStart = AutoPlayCheck?.IsChecked == true;
+        _settings.Fullscreen = FullscreenCheck?.IsChecked == true;
+        _settings.Loop = LoopCheck?.IsChecked == true;
+        _settings.Mute = MuteCheck?.IsChecked == true;
+        _settings.Volume = (int)Math.Round(VolumeSlider?.Value ?? _settings.Volume);
+        _settings.StartDelaySeconds = (int)(DelayBox?.Value ?? _settings.StartDelaySeconds);
+        _settings.AdvancedLogging = AdvancedLoggingCheck?.IsChecked == true;
+        _settings.MonitorDeviceName = MonitorPicker?.SelectedDeviceName ?? _settings.MonitorDeviceName;
+
+        if (DefaultVideoCombo?.SelectedItem is VideoItem item)
             _settings.DefaultVideoId = item.Id;
-
-        _settings.MonitorDeviceName = MonitorPicker.SelectedDeviceName;
 
         App.Instance.SaveSettings(_settings);
 
-        // designkonforme Messagebox über DialogService
-        await DialogService.ShowMessageAsync("Gespeichert", "Einstellungen wurden gespeichert.");
+        try { _ = DialogService.ToastAsync("Einstellungen übernommen"); } catch { }
+        try { LogService.LogInfo("Settings changed via UI. AutoPlay=" + _settings.AutoPlayOnStart + ", AdvancedLogging=" + _settings.AdvancedLogging); } catch { }
     }
 
     private void UpdateMonitorHint()
     {
+        if (MonitorHint == null || MonitorPicker == null) return;
         MonitorHint.Text = string.IsNullOrWhiteSpace(MonitorPicker.SelectedDeviceName)
             ? "Bitte Monitor auswählen."
             : "Ausgewählt: " + MonitorPicker.SelectedDeviceName;
@@ -90,7 +117,7 @@ public partial class SettingsPage
     private Task RefreshAutostartStatus()
     {
         var enabled = TaskSchedulerService.IsAutostartEnabled();
-        AutostartStatus.Text = enabled ? "Autostart ist aktiv." : "Autostart ist nicht aktiv.";
+        if (AutostartStatus != null) AutostartStatus.Text = enabled ? "Autostart ist aktiv." : "Autostart ist nicht aktiv.";
         return Task.CompletedTask;
     }
 }

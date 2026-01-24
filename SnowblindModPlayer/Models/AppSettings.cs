@@ -17,4 +17,7 @@ public class AppSettings
 
     // Neu: Für Audio-Only Modus
     public bool AudioOnly { get; set; } = false;
+
+    // Neu: erweitertes Logging aktivieren
+    public bool AdvancedLogging { get; set; } = false;
 }
